@@ -60,7 +60,7 @@ router.post("/signup", upload.single("profileImage"), async (req, res) => {
       profileImageURL,
     });
 
-    return res.redirect("/login");
+    return res.redirect("/");
   } catch (error) {
     // HANDLE DUPLICATE EMAIL
     if (error.code === 11000) {
