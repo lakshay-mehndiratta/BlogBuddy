@@ -32,16 +32,37 @@ router.get("/signup", (req, res) => {
 });
 
 router.post("/signin", async (req, res) => {
-    const {email, password} = req.body;
-    try {
-        const token = await User.matchPasswordAndGenerateToken(email, password);
+  const { email, password } = req.body;
 
-        return res.cookie("token", token).redirect("/");
-    } catch (error) {
-        return res.render("signin", {
-            error: "Invalid email or password!"
-        });
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.render("signin", {
+        error: "Invalid email or password",
+      });
     }
+
+    const hashedInputPassword = createHmac("sha256", user.salt)
+      .update(password)
+      .digest("hex");
+
+    if (hashedInputPassword !== user.password) {
+      return res.render("signin", {
+        error: "Invalid email or password",
+      });
+    }
+
+    // SUCCESS LOGIN
+    const token = createTokenForUser(user);
+    res.cookie("token", token);
+    return res.redirect("/");
+
+  } catch (error) {
+    console.error(error);
+    return res.render("signin", {
+      error: "Something went wrong",
+    });
+  }
 });
 
 router.post("/signup", upload.single("profileImage"), async (req, res) => {
