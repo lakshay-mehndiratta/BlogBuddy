@@ -45,21 +45,37 @@ router.post("/signin", async (req, res) => {
 });
 
 router.post("/signup", upload.single("profileImage"), async (req, res) => {
+  try {
     const { fullName, email, password } = req.body;
-    let profileImageURL = "/images/defaultpfp.jpg";
 
+    let profileImageURL = "/images/defaultpfp.jpg";
     if (req.file && req.file.filename) {
-        profileImageURL = `/uploads/${req.file.filename}`;
+      profileImageURL = `/uploads/${req.file.filename}`;
     }
 
     await User.create({
-        fullName,
-        email,
-        password,
-        profileImageURL,
+      fullName,
+      email,
+      password,
+      profileImageURL,
     });
-    return res.redirect("/");
+
+    return res.redirect("/login");
+  } catch (error) {
+    // HANDLE DUPLICATE EMAIL
+    if (error.code === 11000) {
+      return res.render("signup", {
+        error: "Email already registered. Please login instead.",
+      });
+    }
+
+    console.error(error);
+    return res.status(500).render("signup", {
+      error: "Something went wrong. Please try again.",
+    });
+  }
 });
+
 
 router.get("/logout", (req, res) => {
     res.clearCookie("token").redirect("/");
