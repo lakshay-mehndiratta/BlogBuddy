@@ -5,6 +5,13 @@ const path = require('path');
 
 const router = Router();
 
+const fs = require("fs");
+
+const uploadPath = path.resolve("./public/uploads");
+if (!fs.existsSync(uploadPath)) {
+  fs.mkdirSync(uploadPath, { recursive: true });
+}
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, path.resolve(`./public/uploads`));
@@ -40,7 +47,9 @@ router.post("/signin", async (req, res) => {
 
 router.post("/signup", upload.single("profileImage"), async (req, res) => {
     const { fullName, email, password } = req.body;
-    const profileImageURL = `/uploads/${req.file.filename}`;
+    const profileImageURL = req.file
+  ? `/uploads/${req.file.filename}`
+  : "/images/defaultpfp.jpg";
     await User.create({
         fullName,
         email,
